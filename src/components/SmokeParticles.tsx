@@ -89,12 +89,16 @@ export function SmokeParticles({ smokeState, carRef }: { smokeState: React.Mutab
         // Make the plane always face the camera
         dummy.rotation.x = -Math.PI / 2 // Or just keep it as a box or sphere for simplicity
         
-        dummy.scale.setScalar(p.scale)
+        // Fade out by shrinking size as life gets low
+        const lifeRatio = Math.max(0, p.life / p.maxLife)
+        const currentScale = p.scale * Math.pow(lifeRatio, 0.5) // shrink near the end
+        
+        dummy.scale.setScalar(currentScale)
         dummy.updateMatrix()
         meshRef.current!.setMatrixAt(i, dummy.matrix)
         
-        // Fade out color (Additive blending means black = invisible)
-        const intensity = Math.max(0, p.life / p.maxLife) * 0.3 // max 0.3 brightness
+        // Color is solid white, but we dim it slightly as it dies
+        const intensity = 0.5 + 0.5 * lifeRatio
         colorDummy.setRGB(intensity, intensity, intensity)
         meshRef.current!.setColorAt(i, colorDummy)
       } else {
@@ -111,11 +115,10 @@ export function SmokeParticles({ smokeState, carRef }: { smokeState: React.Mutab
     if (meshRef.current.instanceColor) meshRef.current.instanceColor.needsUpdate = true
   })
 
-  // We use a simple icosahedron or sphere to represent smoke puffs so they look volumetric
   return (
     <instancedMesh ref={meshRef} args={[undefined, undefined, MAX_PARTICLES]}>
       <icosahedronGeometry args={[1, 1]} />
-      <meshBasicMaterial color="white" transparent blending={THREE.AdditiveBlending} depthWrite={false} />
+      <meshBasicMaterial color="#e2e8f0" transparent opacity={0.6} depthWrite={false} />
     </instancedMesh>
   )
 }
