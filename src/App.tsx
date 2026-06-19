@@ -1,9 +1,11 @@
 import { Suspense, useMemo, useState, useEffect } from 'react'
 import { Canvas } from '@react-three/fiber'
-import { Physics, RigidBody } from '@react-three/rapier'
+import { Physics } from '@react-three/rapier'
 import { Environment, KeyboardControls, useKeyboardControls } from '@react-three/drei'
 import type { KeyboardControlsEntry } from '@react-three/drei'
 import { ProceduralCar } from './components/ProceduralCar'
+import { DayNightCycle } from './components/Environment/DayNightCycle'
+import { CityStreet } from './components/Environment/CityStreet'
 import { motion, AnimatePresence } from 'framer-motion'
 
 export const Controls = {
@@ -293,33 +295,12 @@ function App() {
         <KeyboardControls map={controlMap}>
           <CameraController onToggle={setCameraView} />
           <Canvas shadows camera={{ position: [0, 5, -10], fov: 60 }}>
-            {/* Daytime Environment */}
-            <color attach="background" args={['#87CEEB']} />
-            <fog attach="fog" args={['#87CEEB', 20, 150]} />
-            
-            <ambientLight intensity={1.5} />
-            <directionalLight 
-              position={[100, 100, -100]} 
-              intensity={2.5} 
-              castShadow 
-              shadow-mapSize={[2048, 2048]} 
-            >
-              <orthographicCamera attach="shadow-camera" args={[-150, 150, 150, -150, 0.1, 500]} />
-            </directionalLight>
-            
             <Suspense fallback={null}>
+              <DayNightCycle />
+              
               <Physics>
                 {gameStarted && <ProceduralCar color="#ef4444" cameraView={cameraView} />}
-
-                {/* Massive Asphalt Ground */}
-                <RigidBody type="fixed" colliders="cuboid" restitution={0.2} friction={0}>
-                  <mesh position={[0, -5, 0]} receiveShadow>
-                    <boxGeometry args={[2000, 10, 2000]} />
-                    <meshStandardMaterial color="#333333" roughness={0.9} metalness={0.1} />
-                  </mesh>
-                  {/* Grid overlay for speed sensation */}
-                  <gridHelper args={[2000, 200, '#555555', '#444444']} position={[0, 0.01, 0]} />
-                </RigidBody>
+                <CityStreet />
               </Physics>
 
               <Environment preset="night" />
